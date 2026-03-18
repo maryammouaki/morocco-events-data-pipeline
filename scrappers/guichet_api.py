@@ -6,6 +6,8 @@ base_url="https://apiv2.guichet.com/v1/ticketing/events?limit=30"
 all_events=[]
 page=1
 
+
+
 while True:
     url=f"{base_url}&page={page}"
     retries=0
@@ -18,7 +20,7 @@ while True:
             events=data.get('events', [])
             
             if not events:
-                print("No more events found")
+                print(f"No more events at page {page} - Stopping")
                 break
             
             for event in events:
@@ -32,13 +34,12 @@ while True:
                     "place": event.get('place', {}).get('name') if event.get('place') else None,
                     "category": event.get('category', {}).get('title') if event.get('category') else None,
                     "producer": event.get('producer', {}).get('title') if event.get('producer') else None,
-                    
                 }
                 all_events.append(clean_event)
             
             page+=1
             print(f"Scraped page {page-1} ({len(events)} events, total: {len(all_events)})")
-            time.sleep(2) 
+            time.sleep(1)
             break
             
         except Exception as e:
@@ -47,14 +48,15 @@ while True:
             if retries < max_retries:
                 time.sleep(5 * retries)  
             else:
-                print("Max retries exceeded, stopping")
+                print("Max retries exceeded")
                 break
     
-    if retries == max_retries:
+    if not events or retries == max_retries:
         break
 
 
 
-with open('all_events.json', 'w', encoding='utf-8') as f:
+with open('guichet_events.json', 'w', encoding='utf-8') as f:
     json.dump(all_events, f, indent=2, ensure_ascii=False)
-print("Saved to all_events.json")
+
+
