@@ -1,0 +1,7 @@
+com/morocco/events/deserializer/EventDeserializer.class
+com/morocco/events/FlinkEventsProcessor.class
+com/morocco/events/model/CityStatistics.class
+com/morocco/events/model/Event.class
+com/morocco/events/FlinkEventsProcessor$EventWindowFunction.class
+com/morocco/events/FlinkEventsProcessor$EventAggregateFunction.class
+com/morocco/events/FlinkEventsProcessor$EventAccumulator.class

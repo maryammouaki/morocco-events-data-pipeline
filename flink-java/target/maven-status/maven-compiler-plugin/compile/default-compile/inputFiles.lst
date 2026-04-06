@@ -1,0 +1,4 @@
+/workspace/flink-java/src/main/java/com/morocco/events/deserializer/EventDeserializer.java
+/workspace/flink-java/src/main/java/com/morocco/events/model/CityStatistics.java
+/workspace/flink-java/src/main/java/com/morocco/events/FlinkEventsProcessor.java
+/workspace/flink-java/src/main/java/com/morocco/events/model/Event.java

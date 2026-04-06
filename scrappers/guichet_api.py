@@ -1,12 +1,17 @@
 import requests as req
 import json
 import time
+from kafka import KafkaProducer
+
+# Kafka producer
+producer = KafkaProducer(
+    bootstrap_servers='localhost:29092',
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+)
 
 base_url="https://apiv2.guichet.com/v1/ticketing/events?limit=30"
 all_events=[]
 page=1
-
-
 
 while True:
     url=f"{base_url}&page={page}"
@@ -34,8 +39,10 @@ while True:
                     "place": event.get('place', {}).get('name') if event.get('place') else None,
                     "category": event.get('category', {}).get('title') if event.get('category') else None,
                     "producer": event.get('producer', {}).get('title') if event.get('producer') else None,
+                    "source": "guichet"
                 }
                 all_events.append(clean_event)
+                producer.send('eventsmorroco', value=clean_event, key=clean_event['title'].encode('utf-8'))
             
             page+=1
             print(f"Scraped page {page-1} ({len(events)} events, total: {len(all_events)})")
@@ -54,9 +61,8 @@ while True:
     if not events or retries == max_retries:
         break
 
-
-
-with open('guichet_events.json', 'w', encoding='utf-8') as f:
-    json.dump(all_events, f, indent=2, ensure_ascii=False)
+producer.flush()
+producer.close()
+print(json.dumps(all_events))
 
 

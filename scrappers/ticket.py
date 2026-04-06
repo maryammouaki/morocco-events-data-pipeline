@@ -1,19 +1,23 @@
 import cloudscraper
-import json 
+import json
+from kafka import KafkaProducer
 
-# Utiliser cloudscraper pour contourner Cloudflare
+# Kafka producer
+producer = KafkaProducer(
+    bootstrap_servers='localhost:29092',
+    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+)
+
 scraper = cloudscraper.create_scraper()
 
 base_url = "https://www.ticket.ma/api/list-events?type=last&limit=100&categoryID=0&page=1"
-output_file = "tickets_events.json"
-
-
 
 try:
     response = scraper.get(base_url, timeout=15)
     
     if response.status_code != 200:
         print(f"Error: API returned status {response.status_code}")
+        producer.close()
         exit(1)
     
     data = response.json()
@@ -21,8 +25,8 @@ try:
     
     if not events:
         print("No events found")
+        producer.close()
         exit(1)
-    
     
     all_events = []
     for event in events:
@@ -44,18 +48,17 @@ try:
             "open_at": event.get('open_at'),
             "image": event.get('image'),
             "category": event.get('category'),
+            "source": "ticket.ma",
             "place": {k: v for k, v in place.items() if v is not None}
-            
         }
         all_events.append(clean_event)
+        producer.send('eventsmorroco', value=clean_event, key=clean_event['title'].encode('utf-8'))
     
-    
-    with open(output_file, 'w', encoding='utf-8') as f:
-        json.dump(all_events, f, indent=2, ensure_ascii=False)
-    
-    print(f"✓ Scraped {len(all_events)} events")
-    print(f"✓ Saved to: {output_file}")
+    print(json.dumps(all_events))
+    producer.flush()
+    producer.close()
     
 except Exception as e:
     print(f"Error: {e}")
+    producer.close()
     exit(1)
